@@ -107,7 +107,7 @@ class LatexModule(Cog):
 
 	@Cog.listener()
 	async def on_message_discarded(self, message: Message):
-		if not message.author.bot and message.content.count('$$') >= 2 and not message.content.startswith('=='):
+		if (not message.author.bot or message.author.id == 1485384203150561483) and message.content.count('$$') >= 2 and not message.content.startswith('=='):
 			if is_private(message.channel) or (await self.bot.settings.resolve_message('c-tex', message) and await self.bot.settings.resolve_message('f-inline-tex', message)):
 				latex = extract_inline_tex(message.clean_content)
 				if latex != '':

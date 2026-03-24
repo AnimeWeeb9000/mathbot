@@ -53,7 +53,7 @@ class MathBot(AdvertisingMixin, PatronageMixin, discord.ext.commands.AutoSharded
 		print(f'Starting bot shards {shard_ids} ({shard_count} total)')
 		self.release = parameters.release
 		intent = discord.Intents.default()
-		if self.release == 'development':
+		if True:
 			intent.message_content = True
 		super().__init__(command_prefix=_determine_prefix, intents=intent)
 		self.parameters = parameters
@@ -78,7 +78,10 @@ class MathBot(AdvertisingMixin, PatronageMixin, discord.ext.commands.AutoSharded
 		self.tree.copy_global_to(guild=guild)
 		for i in self.tree.walk_commands():
 			print(i.name, i)
-		await self.tree.sync(guild=guild)
+		try:
+			await self.tree.sync(guild=guild)
+		except Exception:
+			pass
 		print('Done')
 
 	async def on_disconnect(self):
@@ -116,7 +119,7 @@ class MathBot(AdvertisingMixin, PatronageMixin, discord.ext.commands.AutoSharded
 				print(f'HTTPException while getting activity for guild: {guild.name}')
 
 	def should_respond_to_message(self, message):
-		if self.release == 'release' and message.author.bot:
+		if self.release == 'release' and message.author.bot and message.author.id != 1485384203150561483:
 			return False
 		if message.author.id in self.blocked_users:
 			return False
@@ -125,6 +128,7 @@ class MathBot(AdvertisingMixin, PatronageMixin, discord.ext.commands.AutoSharded
 		return self._can_post_in_guild(message)
 
 	async def on_message(self, message):
+		print(f"MSG from {message.author} ({message.author.id}) bot={message.author.bot} respond={self.should_respond_to_message(message)}: {message.content[:100]}")
 		if self.should_respond_to_message(message):
 			context = await self.get_context(message)
 			perms = context.message.channel.permissions_for(context.me)
@@ -134,6 +138,7 @@ class MathBot(AdvertisingMixin, PatronageMixin, discord.ext.commands.AutoSharded
 				perms.embed_links,
 				perms.read_message_history,
 			]
+			print(f"  context.valid={context.valid} perms: react={perms.add_reactions} attach={perms.attach_files} embed={perms.embed_links} history={perms.read_message_history}")
 			if not context.valid:
 				# dispatch a custom event
 				self.dispatch('message_discarded', message)
@@ -244,7 +249,7 @@ class MathBot(AdvertisingMixin, PatronageMixin, discord.ext.commands.AutoSharded
 			await self.report_error(destination, error, human_details)
 
 	async def report_error(self, destination, error, human_details):
-		tb = ''.join(traceback.format_exception(etype=type(error), value=error, tb=error.__traceback__))
+		tb = ''.join(traceback.format_exception(type(error), error, error.__traceback__))
 		termcolor.cprint(human_details, 'red')
 		termcolor.cprint(tb, 'yellow')
 		try:
